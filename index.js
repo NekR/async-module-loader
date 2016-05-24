@@ -37,16 +37,23 @@ module.exports.pitch = function(remainingRequest) {
     chunkName = ', ' + JSON.stringify(chunkName);
   }
 
-  var requset = loaderUtils.stringifyRequest(this, '!!' + remainingRequest);
+  var request = loaderUtils.stringifyRequest(this, '!!' + remainingRequest);
+  var callback;
+
+  if (query.noexec) {
+    callback = 'callback(function() { return require(' + request + ') })';
+  } else {
+    callback = 'callback(require(' + request + '))';
+  }
 
   var result = [
     'require(' + loaderUtils.stringifyRequest(this, '!' + path.join(__dirname, 'patch.js')) + ')',
     'module.exports = function(callback, errback) {',
-    '  require.ensure([], function(error) {',
+    '  require.ensure([], function(_, error) {',
     '    if (error) {',
     '      errback();',
     '    } else {',
-    '      callback(require(' + requset + '))',
+    '      ' + callback,
     '    }',
     '  }' + chunkName + ');',
     '};',

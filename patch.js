@@ -13,7 +13,7 @@ function patch() {
     var handler = function(error) {
       if (!callback) return;
 
-      callback(error);
+      callback(__webpack_require__, error);
       callback = null;
     };
 
