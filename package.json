@@ -1,6 +1,6 @@
 {
   "name": "async-module-loader",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": "Arthur Stolyar <nekr.fabula@gmail.com>",
   "description": "Async modules (chunks) loader for webpack with built-in error callbacks",
   "main": "index.js",
