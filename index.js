@@ -8,18 +8,6 @@
 var loaderUtils = require('loader-utils');
 var path = require('path');
 
-function asyncModule() {
-  module.exports = function(callback, errback) {
-    require.ensure([], function(error) {
-      if (error) {
-        errback();
-      } else {
-        callback(require(__module__))
-      }
-    });
-  };
-};
-
 module.exports = function() {};
 module.exports.pitch = function(remainingRequest) {
   this.cacheable && this.cacheable();
@@ -46,9 +34,8 @@ module.exports.pitch = function(remainingRequest) {
     callback = 'callback(require(' + request + '))';
   }
 
-  var result = [
-    'require(' + loaderUtils.stringifyRequest(this, '!' + path.join(__dirname, 'patch.js')) + ')',
-    'module.exports = function(callback, errback) {',
+  var executor = [
+    'function(callback, errback) {',
     '  require.ensure([], function(_, error) {',
     '    if (error) {',
     '      errback();',
@@ -56,7 +43,12 @@ module.exports.pitch = function(remainingRequest) {
     '      ' + callback,
     '    }',
     '  }' + chunkName + ');',
-    '};',
+    '}'
+  ].join('\n');
+
+  var result = [
+    'require(' + loaderUtils.stringifyRequest(this, '!' + path.join(__dirname, 'patch.js')) + ');',
+    'module.exports = ' + (query.promise ? 'new Promise(' + executor + ')' : executor),
   ];
 
   return result.join('\n');
