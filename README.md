@@ -1,30 +1,66 @@
-# ``async-module`` loader for webpack
+# `async-module-loader` for webpack
 
-Based on https://github.com/webpack/bundle-loader with improvements of error handling
+_Based on https://github.com/webpack/bundle-loader with improvements of error handling_
 
 ``npm install async-module-loader``
 
 ## Usage
 
-[Documentation: Using loaders](http://webpack.github.io/docs/using-loaders.html)
+[webpack documentation: Using loaders](http://webpack.github.io/docs/using-loaders.html)
 
-``async-module`` always uses ``lazy`` mode from ``bundle-loader``, this means that chunk loading starts only after returned function is called.
+Also you will need to [use a `AsyncModulePlugin`](#plugin).
 
-``` javascript
-// async-module returns function which accepts 2 callback: for success and for fail
-// Exports of the requested module are passed into success callback as a first argument
-require('async-module!./file.js')(function onLoad(mod) {
+### Basic usage
+
+`async-module-loader` returns function which accepts 2 callbacks: for success and for fail
+Exports of the requested module are passed into success callback as a first argument
+
+```js
+require('async-module-loader!./file.js')(function onLoad(mod) {
   mod.doSomething();
 }, function onError() {
   // error happened
 });
 ```
 
-### More on errors
-By default `webpack` does not provides access to `installedChunks` object which stores loading callbacks for the chunks. If this object is not handled properly, this may cause memory leaks and won't allow to _try_ to load module again since it will stuck in _pending_ state (see [webpack/webpack#1380](https://github.com/webpack/webpack/pull/1380) for details). To fix this issue, you need to include `AsyncModulePlugin` which will export `installedChunks` to the `async-module-loader`. This is how you can do it:
+Also you can use Promises with `promise` option specified, like this:
 
->**NOTE:** memory leaks is a _rare_ case now which in theory should never happen at all. However, you may still want to use `AsyncModulePlugin` to have the ability to _re-fetch chunk after error_.
-If you **do not** plan to try loading chunks again after fail (e.g. "Cannot retrieve data. Click _here_ to try again" functionality), it's totally fine to not use `AsyncModulePlugin`. See [#1](https://github.com/NekR/async-module-loader/issues/1) for details.
+```js
+require('async-module-loader?promise!./file.js').then(function onLoad(mod) {
+  mod.doSomething();
+}, function onError() {
+  // error happened
+});
+```
+
+### Specifying a chunk name
+
+```js
+require('async-module-loader?name=my-chunk!./file.js')(function onLoad(mod) {
+  mod.doSomething();
+}, function onError() {
+  // error happened
+});
+```
+
+### Delayed execution
+
+If you do not want your module to be executed immediately (maybe because some animation is in play), then you can tell to `async-module-loader` to load a chunk, but not execute it. In such, a function will be passed to the success callback instead of a `module.exports` object of requested chunk. Call that function then you will need you chunk executed:
+
+```js
+require('async-module-loader?noexec!./file.js')(function onLoad(executeChunk) {
+  setTimeout(function() {
+    var mod = executeChunk();
+    mod.doSomething();
+  }, 500);
+}, function onError() {
+  // error happened
+});
+```
+
+## Plugin
+
+To make `async-module-loader` work correctly you need to add `AsyncModulePlugin` to your plugins.
 
 ```js
 // webpack.config.js
@@ -43,14 +79,13 @@ module.exports = {
 }
 ```
 
-### Query parameters
+## Query parameters
 
-* `name`: You may set name for bundle. See [documentation](https://github.com/webpack/loader-utils#interpolatename)
+* `name`: Use this to specify output name for requested chunk. See [webpack documentation](https://github.com/webpack/loader-utils#interpolatename)
 
+* `promise`: Use this to return a promise from `async-module-loader`.
 
-``` javascript
-require('async-module?name=my-chunk!./file.js')(..., ...);
-```
+* `noexec`: Use this to delay chunk execution
 
 ## License
 
