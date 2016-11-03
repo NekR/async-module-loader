@@ -8,7 +8,7 @@ _Based on https://github.com/webpack/bundle-loader with improvements of error ha
 
 [webpack documentation: Using loaders](http://webpack.github.io/docs/using-loaders.html)
 
-Also you will need to [use a `AsyncModulePlugin`](#plugin).
+Also you will need to [use `AsyncModulePlugin`](#plugin).
 
 ### Basic usage
 
